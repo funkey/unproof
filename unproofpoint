@@ -1,0 +1,41 @@
+#!/usr/bin/python
+import fileinput
+import re
+import shutil
+import sys
+import tempfile
+
+
+def unescape(url):
+
+    return url.replace('*', '#')
+
+
+def replace_re(match):
+
+    escaped_url = unescape(match.group(1))
+    return escaped_url
+
+
+if __name__ == "__main__":
+
+    for line in fileinput.input():
+
+        if fileinput.isfirstline():
+            if fileinput.isstdin():
+                tmpfile = None
+                out = sys.stdout
+            else:
+                _, tmpfile = tempfile.mkstemp()
+                target = fileinput.filename()
+                out = open(tmpfile, 'w')
+
+        unproofed = re.sub(
+            r'https://urldefense.com/.*?/__(.*?)__;.*?\$',
+            replace_re,
+            line)
+
+        out.write(unproofed)
+
+    if tmpfile is not None:
+        shutil.move(tmpfile, target)
